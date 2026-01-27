@@ -13,6 +13,7 @@ datasource db {
   provider = "postgresql"
 }
 
+
 model User {
   id            String    @id
   name          String
@@ -23,6 +24,9 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+
+  role          UserRoles
+  status        UserStatus @default(ACTIVE)
 
   @@unique([email])
   @@map("user")
@@ -74,4 +78,15 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+enum UserRoles {
+  ADMIN
+  TUTOR
+  STUDENT
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
 }
