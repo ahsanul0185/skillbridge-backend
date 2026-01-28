@@ -6,11 +6,18 @@ type FilterItems = {
     search : string | null;
     hourlyRate : number | null;
     categoryId  : string | null;
+    isFeatured : boolean | null;
     avgRating : number | null;
     totalReviews : number | null;
+
+    page: number;
+    limit: number;
+    skip: number;
+    sortBy: string;
+    sortOrder: string;
 }
 
-const getAllTutors = async ({search, hourlyRate, categoryId, avgRating, totalReviews} : FilterItems) => {
+const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRating, totalReviews, page, limit, sortBy, skip, sortOrder} : FilterItems) => {
 //{search, hourlyRate, categoryId, avgRating, totalReviews}
     const andConditions : TutorProfilesWhereInput[] = [];
 
@@ -49,6 +56,12 @@ const getAllTutors = async ({search, hourlyRate, categoryId, avgRating, totalRev
         })
     }
 
+    if (isFeatured !== null) {
+        andConditions.push({
+            isFeatured : isFeatured
+        })
+    }
+
     if (avgRating) {
         andConditions.push({
             avgRating : {
@@ -67,14 +80,33 @@ const getAllTutors = async ({search, hourlyRate, categoryId, avgRating, totalRev
 
 
     const result = await prisma.tutorProfiles.findMany({
+        take: limit,
+        skip,
         where : {
             AND : andConditions
+        },
+        orderBy: {
+            [sortBy]: sortOrder,
         },
         include : {
             user : true,
         }
     })
-    return result
+
+      const total = await prisma.tutorProfiles.count({
+            where: {
+                AND: andConditions,
+            },
+        });
+      return {
+            data: result,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
 }
 
 
