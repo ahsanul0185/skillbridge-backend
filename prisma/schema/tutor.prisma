@@ -14,6 +14,7 @@ model TutorProfiles {
   availability Availability[]
   bookings     Booking[]
   reviews      Review[]
+  subjects     TutorSubject[]
 
   @@index([categoryId])
   @@map("tutor_profiles")

@@ -9,6 +9,7 @@ type FilterItems = {
     isFeatured : boolean | null;
     avgRating : number | null;
     totalReviews : number | null;
+    subjectId : string | null;
 
     page: number;
     limit: number;
@@ -17,8 +18,8 @@ type FilterItems = {
     sortOrder: string;
 }
 
-const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRating, totalReviews, page, limit, sortBy, skip, sortOrder} : FilterItems) => {
-//{search, hourlyRate, categoryId, avgRating, totalReviews}
+const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRating, totalReviews, subjectId, page, limit, sortBy, skip, sortOrder} : FilterItems) => {
+
     const andConditions : TutorProfilesWhereInput[] = [];
 
     if (search) {
@@ -41,6 +42,17 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
             ],
         })
     }
+
+    if (subjectId) {
+        andConditions.push({
+            subjects : {
+                some : {
+                    subjectId : subjectId
+                }
+            }
+        })
+    }
+
 
     if (hourlyRate) {
         andConditions.push({
@@ -110,4 +122,23 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
 }
 
 
-export const tutorService = {getAllTutors}
+const getTutorById = async (tutorId : string) => {
+    
+   return await prisma.tutorProfiles.findUnique({
+        where : {
+            id : tutorId
+        },
+        include : {
+            user : true,
+            category : true,
+            availability : true,
+            reviews : true,
+        }
+   })
+
+}
+
+
+
+
+export const tutorService = {getAllTutors, getTutorById}
