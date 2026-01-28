@@ -1,0 +1,19 @@
+model Availability {
+  id        String             @id @default(uuid())
+  tutorId   String
+  date      DateTime
+  startTime DateTime
+  endTime   DateTime
+  status    AvailabilityStatus @default(AVAILABLE)
+
+  tutor   TutorProfiles @relation(fields: [tutorId], references: [id], onDelete: Cascade)
+  booking Booking?
+
+  @@index([tutorId])
+  @@map("availability")
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  BOOKED
+}

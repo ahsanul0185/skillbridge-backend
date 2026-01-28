@@ -110,8 +110,6 @@ const sendVerificationEmail = async ({ user, url, token } : SendMailProps) => {
 
       const verificationUrl = `${process.env.APP_URL}/verify-email?token=${token}`
 
-      console.log({ user, url, token })
-
     const info = await transporter.sendMail({
       from: '"SkillBridge" <skillbridge@mail.com>',
       to: user.email,
