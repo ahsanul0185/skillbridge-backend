@@ -57,8 +57,6 @@ export const auth = betterAuth({
                     });
                 }
             }
-
-            console.log("---before hoooooooook")
         }),
     },
     databaseHooks : {
@@ -67,12 +65,11 @@ export const auth = betterAuth({
                 after : async (user) => {
                     try {
                         if (user.role === UserRoles.TUTOR) {
-                            const result = await prisma.tutorProfiles.create({
+                            await prisma.tutorProfiles.create({
                                 data : {
                                     userId : user.id
                                 }
                             })
-                            console.log(result)
                         }
                     } catch (error) {
                         console.log(error)
