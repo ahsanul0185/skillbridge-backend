@@ -7,8 +7,20 @@ const getUser = async (user : User) => {
             id : user.id
         },
         include : {
-            tutorProfile : user.role === UserRoles.TUTOR
-        }
+            tutorProfile : user.role === UserRoles.TUTOR && {
+                include : {
+                    subjects : {
+                        include : {
+                            subject : true
+                        }
+                    },
+                    reviews : true,
+                    bookings : true,
+                    availability : true
+                }
+            }
+        },
+        
     })
 }
 

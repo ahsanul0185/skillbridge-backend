@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import { tutorService } from "./tutor.service";
 import paginationSortingHelper from "../../utils/paginationHelper";
+import type { TutorSubject, User } from "../../../generated/prisma/client";
 
 const getAllTutors = async (req : Request, res : Response, next : NextFunction) => {
     try {
@@ -29,7 +30,7 @@ const getTutorById = async (req : Request, res : Response, next : NextFunction) 
        const result = await tutorService.getTutorById(req.params.tutorId as string);
 
        if (result === null) {
-        return res.status(200).json({success : false, message : "Tutor not found", data : null})
+        return res.status(400).json({success : false, message : "Tutor not found", data : null})
        }
        
        return res.status(200).json({success : true, message : "Tutors data retrieved successfully", data : result})
@@ -38,5 +39,58 @@ const getTutorById = async (req : Request, res : Response, next : NextFunction) 
     }
 }
 
+const updateTutor = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+       const result = await tutorService.updateTutor(req.body, req.user as User);
 
-export const tutorController = {getAllTutors, getTutorById}
+       return res.status(200).json({success : true, message : "Tutors data updated successfully", data : result})
+    } catch (e) {
+       next(e)
+    }
+}
+const updateTutorSubjects = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+
+        const {subjectIds} = req.body;
+
+       if (
+            !Array.isArray(subjectIds) ||
+            subjectIds.length === 0 ||
+            !subjectIds.every((id: unknown) => typeof id === "string")
+            ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid format. Expected: subjectIds: ['id1', 'id2']"
+            });
+        }
+
+       const result = await tutorService.updateTutorSubjects(subjectIds, req.user as User);
+
+       return res.status(200).json({success : true, message : "Subjects updated successfully", data : result})
+    } catch (e) {
+       next(e)
+    }
+}
+
+const deleteTutorSubject = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+
+       const { subjectId } = req.params;
+
+        if (!subjectId || typeof subjectId !== "string") {
+            return res.status(400).json({
+                success: false,
+                message: "subjectId is required",
+            });
+        }
+
+       const result = await tutorService.deleteTutorSubject(subjectId, req.user as User);
+
+       return res.status(200).json({success : true, message : "Subject deleted successfully", data : result})
+    } catch (e) {
+       next(e)
+    }
+}
+
+
+export const tutorController = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject}

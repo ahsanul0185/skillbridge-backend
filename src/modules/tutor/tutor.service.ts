@@ -1,3 +1,4 @@
+import { UserRoles, type TutorProfiles, type TutorSubject, type User } from "../../../generated/prisma/client";
 import type { TutorProfilesWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
 
@@ -139,6 +140,93 @@ const getTutorById = async (tutorId : string) => {
 }
 
 
+const updateTutor = async (data : Partial<TutorProfiles>, user : User) => {
+
+    if (user.role !== UserRoles.ADMIN) {
+        delete data.isFeatured;
+        delete data.avgRating;
+        delete data.totalReviews;
+    }
+
+    return await prisma.tutorProfiles.update({
+        where : {
+            userId : user.id
+        }, 
+        data
+    })
+}
+
+const updateTutorSubjects = async (subjectIds : string[], user : User) => {
+    const tutorProfile = await prisma.tutorProfiles.findUnique({
+        where : {
+            userId : user.id
+        }
+    })
+
+    if (!tutorProfile) {
+        throw new Error("Tutor profile not found");
+    }
+
+    if (!tutorProfile.categoryId) {
+        throw new Error("Tutor profile category not found");
+    }
+
+    const subjects = await prisma.subject.findMany({
+        where : {
+            id : {in : subjectIds}
+        }, 
+        select : {
+            id : true,
+            categoryId : true
+        }
+    })
+
+    if (subjects.length !== subjectIds.length) {
+        throw new Error("One or more subjects are invalid");
+    }
+
+    const invalidSubject = subjects.find(
+        (s) => s.categoryId !== tutorProfile.categoryId
+    )
+
+    if (invalidSubject) {
+       throw new Error("You selected a subject outside your category");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        await tx.tutorSubject.deleteMany({
+            where : {
+                tutorId : tutorProfile.id
+            }
+        })
+
+        const data = subjectIds.map(subjectId => ({tutorId : tutorProfile.id, subjectId}))
+
+        return await tx.tutorSubject.createManyAndReturn({
+            data
+        })
+    })
+}
+
+const deleteTutorSubject = async (subjectId: string, user: User) => {
+    const tutorProfile = await prisma.tutorProfiles.findUnique({
+        where: { userId: user.id },
+    });
+
+    if (!tutorProfile) {
+        throw new Error("Tutor not found");
+    }
+
+    return await prisma.tutorSubject.delete({
+    where: {
+      tutorId_subjectId: {
+        tutorId: tutorProfile.id,
+        subjectId: subjectId,
+      },
+    },
+  });
+
+}
 
 
-export const tutorService = {getAllTutors, getTutorById}
+export const tutorService = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject}

@@ -6,4 +6,5 @@ model TutorSubject {
     subject    Subject @relation(fields: [subjectId], references: [id])
 
     @@id([tutorId, subjectId])
+    @@map("tutor_subjects")
 }

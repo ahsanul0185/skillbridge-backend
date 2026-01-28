@@ -3,13 +3,9 @@ import { Prisma } from "../../generated/prisma/client";
 
 
 function errorHandler (err : any, req : Request, res : Response, next : NextFunction) {
-    let statusCode = 500;
-    let message = "Internal Servar Error"
+    let statusCode = 400;
+    let message = err.message || "Internal Servar Error"
     let error = err
-
-
-
-
     
     if (err instanceof Prisma.PrismaClientValidationError) {
         statusCode = 400;
