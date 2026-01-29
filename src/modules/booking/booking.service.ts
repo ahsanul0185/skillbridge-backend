@@ -20,7 +20,11 @@ const getAllBookings = async (user : User, tutorId : string) => {
         })
     }
 
-    return await prisma.booking.findMany();
+    if (user.role === UserRoles.ADMIN) {
+        return prisma.booking.findMany();
+    }
+
+    throw new Error("Unauthorized");
 }
 
 

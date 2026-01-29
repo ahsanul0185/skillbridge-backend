@@ -8,6 +8,7 @@ import { notFound } from "./middlewares/notFound";
 import { categoryRouter } from "./modules/category/category.router";
 import { availabilityRouter } from "./modules/availability/availability.router";
 import { bookingRouter } from "./modules/booking/booking.router";
+import { reviewRouter } from "./modules/review/review.router";
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use("/api/tutors", tutorRouter);
 app.use("/api/categories", categoryRouter);
 app.use("/api/availability", availabilityRouter);
 app.use("/api/bookings", bookingRouter);
+app.use("/api/reviews", reviewRouter);
 
 app.get("/", (_, res) => {
     res.json("Welcome to Skillbridge server")

@@ -140,6 +140,11 @@ const getTutorById = async (tutorId : string) => {
             category : true,
             availability : true,
             reviews : true,
+            subjects : {
+                include : {
+                    subject : true
+                }
+            }
         }
    })
 
