@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import {auth as betterAuth} from "../lib/auth"
-import type { User, UserRoles } from "../../generated/prisma/client";
+import { UserRoles, type User } from "../../generated/prisma/client";
+import { prisma } from "../lib/prisma";
 
 
 
@@ -25,6 +26,20 @@ export const auth = (...roles : UserRoles[]) => {
                     success: false,
                     message: "You don't have permission to perform this action.",
                 });
+            }
+
+            if (req.user.role === UserRoles.TUTOR) {
+                const tutorProfile = await prisma.tutorProfiles.findUnique({
+                    where : {
+                        userId : req.user.id as string
+                    },
+                    select : {
+                        id : true
+                    }
+                });
+                if (tutorProfile) {
+                    req.tutorId = tutorProfile.id
+                }
             }
 
             next();

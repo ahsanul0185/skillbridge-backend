@@ -1,9 +1,9 @@
 model Availability {
   id        String             @id @default(uuid())
   tutorId   String
-  date      DateTime
-  startTime DateTime
-  endTime   DateTime
+  day       WeekDay
+  startTime String
+  endTime   String
   status    AvailabilityStatus @default(AVAILABLE)
 
   tutor   TutorProfiles @relation(fields: [tutorId], references: [id], onDelete: Cascade)
@@ -16,4 +16,14 @@ model Availability {
 enum AvailabilityStatus {
   AVAILABLE
   BOOKED
+}
+
+enum WeekDay {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }
