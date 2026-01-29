@@ -10,6 +10,7 @@ router.get("/:tutorId", tutorController.getTutorById);
 
 router.put("/update", auth(UserRoles.TUTOR), tutorController.updateTutor)
 router.put("/subjects", auth(UserRoles.TUTOR), tutorController.updateTutorSubjects)
+router.put("/feature/:tutorId", auth(UserRoles.ADMIN), tutorController.featureTutor)
 
 router.delete("/subjects/:subjectId", auth(UserRoles.TUTOR), tutorController.deleteTutorSubject)
 

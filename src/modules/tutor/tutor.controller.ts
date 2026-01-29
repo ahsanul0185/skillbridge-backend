@@ -97,5 +97,24 @@ const deleteTutorSubject = async (req : Request, res : Response, next : NextFunc
     }
 }
 
+const featureTutor = async (req : Request, res : Response, next : NextFunction) => {
+    try {
 
-export const tutorController = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject}
+        if (Object.keys(req.body).some((key) => key !== "isFeatured")) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid field input. Only isFeatured is allowed."});
+        }
+
+        const result = await tutorService.featureTutor(req.body.isFeatured, req.params.tutorId as string)
+
+        return res.status(200).json({success : true, message : "Tutor featured status updated", data : result})
+    } catch (e) {
+        next(e)
+    }
+}
+
+
+
+
+export const tutorController = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor}

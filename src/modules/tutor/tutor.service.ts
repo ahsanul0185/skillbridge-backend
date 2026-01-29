@@ -1,4 +1,4 @@
-import { UserRoles, type TutorProfiles, type TutorSubject, type User } from "../../../generated/prisma/client";
+import { UserRoles, UserStatus, type TutorProfiles, type TutorSubject, type User } from "../../../generated/prisma/client";
 import type { TutorProfilesWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
 
@@ -91,6 +91,11 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
         })
     }
 
+    andConditions.push({
+        user : {
+            status : UserStatus.ACTIVE
+        }
+    });
 
     const result = await prisma.tutorProfiles.findMany({
         take: limit,
@@ -239,5 +244,17 @@ const deleteTutorSubject = async (subjectId: string, user: User) => {
 
 }
 
+const featureTutor = async (isFeatured : boolean, tutorId : string) => {
+    return await prisma.tutorProfiles.update({
+        where : {
+            id : tutorId
+        },
+        data : {
+            isFeatured
+        }
+    })
+}
 
-export const tutorService = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject}
+
+
+export const tutorService = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor}

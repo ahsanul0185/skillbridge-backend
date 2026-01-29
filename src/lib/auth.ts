@@ -4,9 +4,7 @@ import { prisma } from "./prisma";
 import { createAuthMiddleware } from "better-auth/api";
 import { UserRoles } from "../../generated/prisma/enums";
 import sendVerificationEmail from "../utils/sendVerificationEmail";
-
-
-
+import "dotenv/config"
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -51,7 +49,7 @@ export const auth = betterAuth({
     hooks : {
         before : createAuthMiddleware(async (ctx) => {
             if (ctx.path === "/sign-up/email") {
-                if (ctx.body.role === UserRoles.ADMIN) {
+                if (ctx.body.role === UserRoles.ADMIN && (process.env.ALLOW_ADMIN_SEED !== "true")) {
                     throw new APIError("BAD_REQUEST", {
                         message : "You can't sign up as admin"
                     });
