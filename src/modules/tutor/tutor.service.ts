@@ -103,6 +103,12 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
         },
         include : {
             user : true,
+            availability : true,
+            _count : {
+                select : {
+                    reviews : true
+                }
+            }
         }
     })
 

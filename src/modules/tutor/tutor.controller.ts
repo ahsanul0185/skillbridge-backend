@@ -19,6 +19,11 @@ const getAllTutors = async (req : Request, res : Response, next : NextFunction) 
         const paginations = paginationSortingHelper(req.query);
 
        const result = await tutorService.getAllTutors({...filters, ...paginations});
+
+       if (result.data.length < 1) {
+            return res.status(200).json({success : true, message : "No tutors found", data : []})        
+       }
+
        return res.status(200).json({success : true, message : "Tutors data retrieved successfully", data : result.data, pagination : result.pagination})
     } catch (e) {
        next(e)

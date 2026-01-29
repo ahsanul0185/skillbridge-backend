@@ -7,7 +7,7 @@ model Availability {
   status    AvailabilityStatus @default(AVAILABLE)
 
   tutor   TutorProfiles @relation(fields: [tutorId], references: [id], onDelete: Cascade)
-  booking Booking?
+  booking Booking[]
 
   @@index([tutorId])
   @@map("availability")
