@@ -67,6 +67,7 @@ const getBookingById = async (user: User, tutorId: string, bookingId: string) =>
                 user : true
             }
         },
+        subject : true,
         availability : true,
         review : true
       }
@@ -86,6 +87,7 @@ const getBookingById = async (user: User, tutorId: string, bookingId: string) =>
                 user : true
             }
         },
+        subject : true,
         availability : true,
         review : true
       }
@@ -103,6 +105,7 @@ const getBookingById = async (user: User, tutorId: string, bookingId: string) =>
                 user : true
             }
         },
+        subject : true,
         availability : true,
         review : true
       }
@@ -113,7 +116,11 @@ const getBookingById = async (user: User, tutorId: string, bookingId: string) =>
 };
 
 const createBooking = async (data: Booking, studentId: string) => {
-  const { tutorId, availabilityId } = data;
+  const { tutorId, availabilityId, subjectId } = data;
+
+  if (!availabilityId || !tutorId || !subjectId) {
+    throw new Error("Availability ID, Tutor ID, and Subject ID are required");
+  }
 
   const tutorInfo = await prisma.$transaction(async (tx) => {
     const availability = await tx.availability.findUniqueOrThrow({
@@ -169,6 +176,7 @@ const createBooking = async (data: Booking, studentId: string) => {
         tutorId,
         availabilityId,
         price,
+        subjectId,
       },
     });
   });

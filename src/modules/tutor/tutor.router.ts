@@ -6,9 +6,9 @@ import { UserRoles } from "../../../generated/prisma/enums";
 const router = Router();
 
 router.get("/", tutorController.getAllTutors);
+router.get("/overview", auth(UserRoles.TUTOR), tutorController.getTutorDashboardOverview);
 router.get("/:tutorId", tutorController.getTutorById);
 
-router.get("/overview", auth(UserRoles.TUTOR, UserRoles.ADMIN), tutorController.getTutorById);
 router.put("/update", auth(UserRoles.TUTOR), tutorController.updateTutor)
 router.put("/subjects", auth(UserRoles.TUTOR), tutorController.updateTutorSubjects)
 router.put("/feature/:tutorId", auth(UserRoles.ADMIN), tutorController.featureTutor)

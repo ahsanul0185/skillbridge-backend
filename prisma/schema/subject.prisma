@@ -6,6 +6,7 @@ model Subject {
 
   category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   tutors        TutorSubject[]
+  bookings      Booking[]
 
   @@index([categoryId])
   @@map("subjects")
