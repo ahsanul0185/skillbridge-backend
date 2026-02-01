@@ -33,9 +33,10 @@ export const auth = betterAuth({
 
     emailVerification : {
         sendVerificationEmail : async ({ user, url, token }) => {
+            console.log(url) 
             sendVerificationEmail({ user: { ...user, image: user.image ?? null } , url, token })
         },
-        
+        autoSignInAfterVerification : true
     },
     
     socialProviders: {

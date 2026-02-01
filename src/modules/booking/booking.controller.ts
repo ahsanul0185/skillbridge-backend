@@ -9,6 +9,16 @@ import type { User } from "../../../generated/prisma/client";
 const getAllBookings = async (req : Request, res : Response, next : NextFunction) => {
     try {
         const result = await bookingService.getAllBookings(req.user as User, req.tutorId as string)
+        return res.json({success : true, message : "Bookings data retrieved successfully", data : result})
+    } catch (e) {
+        next(e)
+    }
+}
+
+
+const getBookingById = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+        const result = await bookingService.getBookingById(req.user as User, req.tutorId as string, req.params.bookingId as string)
         return res.json({success : true, message : "Booking data retrieved successfully", data : result})
     } catch (e) {
         next(e)
@@ -55,4 +65,4 @@ const updateBookingStatus = async (req : Request, res : Response, next : NextFun
 
 
 
-export const bookingController = {createBooking, updateBookingStatus, getAllBookings}
+export const bookingController = {createBooking, updateBookingStatus, getAllBookings, getBookingById}

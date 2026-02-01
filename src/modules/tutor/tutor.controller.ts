@@ -53,6 +53,7 @@ const updateTutor = async (req : Request, res : Response, next : NextFunction) =
        next(e)
     }
 }
+
 const updateTutorSubjects = async (req : Request, res : Response, next : NextFunction) => {
     try {
 
@@ -115,6 +116,16 @@ const featureTutor = async (req : Request, res : Response, next : NextFunction) 
 }
 
 
+const getTutorDashboardOverview = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+       const result = await tutorService.getTutorDashboardOverview(req.user as User);
+
+       return res.status(200).json({success : true, message : "Retrieved tutors overview successfully", data : result})
+    } catch (e) {
+       next(e)
+    }
+}
 
 
-export const tutorController = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor}
+
+export const tutorController = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor, getTutorDashboardOverview}

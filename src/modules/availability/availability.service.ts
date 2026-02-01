@@ -125,7 +125,6 @@ const deleteAvailability = async (availabilityId: string, tutorId: string) => {
     throw new Error("Not authorized to delete this availability");
   }
 
-
   if (existing.status === AvailabilityStatus.BOOKED) {
     throw new Error("Cannot delete a booked availability");
   }

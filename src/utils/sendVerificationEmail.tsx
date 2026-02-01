@@ -57,7 +57,7 @@ const getEmailTemplate = (userName: string, verificationUrl: string): string => 
                             <table role="presentation" style="margin: 0 0 32px;">
                                 <tr>
                                     <td>
-                                        <a href="${verificationUrl}" style="display: inline-block; padding: 14px 28px; background-color: #000000; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: 500;">
+                                        <a href="${verificationUrl}" style="display: inline-block; padding: 14px 28px; background-color: #088395; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 15px; font-weight: 500;">
                                             Verify email address
                                         </a>
                                     </td>
@@ -115,7 +115,7 @@ const sendVerificationEmail = async ({ user, url, token } : SendMailProps) => {
       to: user.email,
       subject: "Verify Your Email Address - SkillBridge",
       text: `Hi ${user.name},\n\nThank you for signing up with SkillBridge! Please verify your email address by clicking this link: ${verificationUrl}\n\nThis link will expire in 24 hours.\n\nIf you didn't create an account, you can safely ignore this email.\n\nBest regards,\nThe SkillBridge Team`,
-      html: getEmailTemplate(user.name as string, verificationUrl),
+      html: getEmailTemplate(user.name as string, url),
     });
 
       console.log("Message sent:", info.messageId);

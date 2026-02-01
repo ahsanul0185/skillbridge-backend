@@ -1,4 +1,4 @@
-import { UserRoles, UserStatus, type TutorProfiles, type TutorSubject, type User } from "../../../generated/prisma/client";
+import { AvailabilityStatus, UserRoles, UserStatus, type TutorProfiles, type TutorSubject, type User } from "../../../generated/prisma/client";
 import type { TutorProfilesWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma"
 
@@ -109,6 +109,7 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
         include : {
             user : true,
             availability : true,
+            category : true,
             _count : {
                 select : {
                     reviews : true
@@ -133,7 +134,6 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
         };
 }
 
-
 const getTutorById = async (tutorId : string) => {
     
    return await prisma.tutorProfiles.findUnique({
@@ -144,7 +144,11 @@ const getTutorById = async (tutorId : string) => {
             user : true,
             category : true,
             availability : true,
-            reviews : true,
+            reviews : {
+                include : {
+                    student : true
+                }
+            },
             subjects : {
                 include : {
                     subject : true
@@ -154,7 +158,6 @@ const getTutorById = async (tutorId : string) => {
    })
 
 }
-
 
 const updateTutor = async (data : Partial<TutorProfiles>, user : User) => {
 
@@ -255,6 +258,184 @@ const featureTutor = async (isFeatured : boolean, tutorId : string) => {
     })
 }
 
+const getTutorDashboardOverview = async (user: User) => {
+
+    const tutorProfile = await prisma.tutorProfiles.findUnique({
+        where: {
+            userId: user.id
+        },
+        select: {
+            id: true,
+            bio: true,
+            hourlyRate: true,
+            avgRating: true,
+            totalReviews: true,
+            isFeatured: true,
+            category: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            },
+            subjects: {
+                select: {
+                    subject: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    if (!tutorProfile) {
+        throw new Error("Tutor profile not found");
+    }
+
+    return await prisma.$transaction(async (tx) => {
+        const [
+            totalBookings,
+            completedBookings,
+            cancelledBookings,
+            upcomingBookings,
+            totalEarnings,
+            recentReviews,
+            availabilities
+        ] = await Promise.all([
+            tx.booking.count({
+                where: {
+                    tutorId: tutorProfile.id
+                }
+            }),
+
+            tx.booking.count({
+                where: {
+                    tutorId: tutorProfile.id,
+                    status: "COMPLETED"
+                }
+            }),
+
+            tx.booking.count({
+                where: {
+                    tutorId: tutorProfile.id,
+                    status: "CANCELLED"
+                }
+            }),
+
+            tx.booking.findMany({
+                where: {
+                    tutorId: tutorProfile.id,
+                    status: "CONFIRMED"
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                take: 5,
+                select: {
+                    id: true,
+                    price: true,
+                    status: true,
+                    createdAt: true,
+                    completedAt: true,
+                    student: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true
+                        }
+                    },
+                    availability: {
+                        select: {
+                            day: true,
+                            startTime: true,
+                            endTime: true
+                        }
+                    }
+                }
+            }),
+
+            tx.booking.aggregate({
+                where: {
+                    tutorId: tutorProfile.id,
+                    status: "COMPLETED"
+                },
+                _sum: {
+                    price: true
+                }
+            }),
+
+            tx.review.findMany({
+                where: {
+                    tutorId: tutorProfile.id
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                take: 5,
+                select: {
+                    id: true,
+                    rating: true,
+                    review: true,
+                    createdAt: true,
+                    student: {
+                        select: {
+                            id: true,
+                            name: true,
+                            image: true
+                        }
+                    }
+                }
+            }),
+
+            tx.availability.findMany({
+                where: {
+                    tutorId: tutorProfile.id
+                },
+                orderBy: {
+                    day: "asc"
+                },
+                select: {
+                    id: true,
+                    day: true,
+                    startTime: true,
+                    endTime: true,
+                    status: true
+                }
+            })
+        ]);
+
+        const activeAvailabilities = availabilities.filter(a => a.status === AvailabilityStatus.AVAILABLE);
+
+        return {
+            profile: {
+                bio: tutorProfile.bio,
+                hourlyRate: tutorProfile.hourlyRate,
+                avgRating: tutorProfile.avgRating,
+                totalReviews: tutorProfile.totalReviews,
+                isFeatured: tutorProfile.isFeatured,
+                category: tutorProfile.category,
+                subjects: tutorProfile.subjects.map(tutorSubejct => tutorSubejct.subject)
+            },
+            stats: {
+                totalBookings,
+                completedBookings,
+                cancelledBookings,
+                upcomingCount: upcomingBookings.length,
+                totalEarnings: totalEarnings._sum.price ?? 0
+            },
+            upcomingBookings,
+            recentReviews,
+            availability: {
+                total: availabilities.length,
+                activeSlots: activeAvailabilities.length,
+                slots: availabilities
+            }
+        };
+    });
+};
 
 
-export const tutorService = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor}
+
+export const tutorService = {getAllTutors, getTutorById, updateTutor, updateTutorSubjects, deleteTutorSubject, featureTutor, getTutorDashboardOverview}

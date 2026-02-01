@@ -32,6 +32,7 @@ const listUsers = async ({page, limit, sortBy, skip, sortOrder} : PaginationInpu
 }
 
 const getUser = async (user : User) => {
+
     return await prisma.user.findUnique({
         where : {
             id : user.id
@@ -45,10 +46,7 @@ const getUser = async (user : User) => {
                         include : {
                             subject : true
                         }
-                    },
-                    reviews : true,
-                    bookings : true,
-                    availability : true
+                    }
                 }
             }
         },
@@ -57,9 +55,10 @@ const getUser = async (user : User) => {
 }
 
 const updateUserData = async (data: Partial<User>, user: User) => {
-  const { name, image } = data;
 
-  if (!name && !image) {
+  const { name, image, phone } = data;
+
+  if (!name && !image && !phone) {
     throw new Error("Invalid input fields");
   }
 
@@ -77,12 +76,14 @@ const updateUserData = async (data: Partial<User>, user: User) => {
     data: {
       ...(name && { name }),
       ...(image && { image }),
+      ...(phone && { phone }),
     },
     select: {
       id: true,
       name: true,
       image: true,
       email: true, 
+      phone : true
     },
   });
 };

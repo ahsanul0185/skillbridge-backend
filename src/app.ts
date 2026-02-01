@@ -1,5 +1,6 @@
 import { toNodeHandler } from "better-auth/node";
 import express from "express";
+import cors from "cors"
 import { auth } from "./lib/auth";
 import { userRouter } from "./modules/user/user.router";
 import { tutorRouter } from "./modules/tutor/tutor.router";
@@ -11,6 +12,11 @@ import { bookingRouter } from "./modules/booking/booking.router";
 import { reviewRouter } from "./modules/review/review.router";
 
 const app = express();
+
+app.use(cors({
+    origin : process.env.APP_URL || "http://localhost:3000",
+    credentials : true
+}))
 
 app.all("/api/auth/{*any}", toNodeHandler(auth));
 app.use(express.json());
