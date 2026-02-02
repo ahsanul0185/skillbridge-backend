@@ -8,6 +8,9 @@ import { prisma } from "../lib/prisma";
 export const auth = (...roles : UserRoles[]) => {
     return async (req : Request, res : Response, next : NextFunction) => {
         try {
+
+            console.log(req.headers)
+            
             const session = await betterAuth.api.getSession({
                 headers : req.headers as any,
             })
@@ -20,6 +23,8 @@ export const auth = (...roles : UserRoles[]) => {
             }
 
             req.user = session.user as User;
+
+            
 
             if (roles.length > 0 && !roles.includes(req.user.role as UserRoles)) {
                 return res.status(403).json({

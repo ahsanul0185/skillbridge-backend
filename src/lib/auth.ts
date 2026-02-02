@@ -9,8 +9,35 @@ import "dotenv/config"
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
-    }),
-    trustedOrigins : [process.env.APP_URL!], 
+    }), 
+    // trustedOrigins : [process.env.APP_URL!],
+  trustedOrigins: async (request) => {
+    const origin = request?.headers.get("origin");
+
+    const allowedOrigins = [
+      process.env.APP_URL,
+      process.env.BETTER_AUTH_URL,
+      "http://localhost:3000",
+      "http://localhost:4000",
+      "http://localhost:5000",
+      "https://skillbridge-frontend-murex.vercel.app",
+      "https://skillbridge-frontend-murex.vercel.app",
+    ].filter(Boolean);
+
+    // Check if origin matches allowed origins or Vercel pattern
+    if (
+      !origin ||
+      allowedOrigins.includes(origin) ||
+      /^https:\/\/.*\.vercel\.app$/.test(origin)
+    ) {
+      return [origin];
+    }
+
+    return [];
+  },
+  basePath: "/api/auth",
+    
+    
     user : {
         additionalFields : {
            role : {
