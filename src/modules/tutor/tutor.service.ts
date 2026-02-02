@@ -115,11 +115,6 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
                     reviews : true
                 }
             },
-             subjects : {
-                include : {
-                    subject : true
-                }
-            }
         }
     })
 

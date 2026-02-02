@@ -44,7 +44,6 @@ const updateUserStatus = async (req : Request, res : Response, next : NextFuncti
 
 const updateUserData = async (req : Request, res : Response, next : NextFunction) => {
     try {
-
         const result = await userService.updateUserData(req.body, req.user as User)
 
         return res.status(200).json({success : true, message : "Updated successfully", data : result})
@@ -54,8 +53,25 @@ const updateUserData = async (req : Request, res : Response, next : NextFunction
 }
 
 
+const getStudentStats = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+        const result = await userService.getStudentStats(req.user?.id as string)
+
+        return res.status(200).json({success : true, message : "Student stats retrieved successfully", data : result})
+    } catch (e) {
+        next(e)
+    }
+}
+const getAdminAnalytics = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+        const result = await userService.getAdminAnalytics()
+
+        return res.status(200).json({success : true, message : "Admin analytics retrieved successfully", data : result})
+    } catch (e) {
+        next(e)
+    }
+}
 
 
 
-
-export const userController = {getUser, listUsers, updateUserStatus, updateUserData}
+export const userController = {getUser, listUsers, updateUserStatus, updateUserData, getStudentStats, getAdminAnalytics}

@@ -1,4 +1,4 @@
-import { BookingStatus, type Review, type User } from "../../../generated/prisma/client"
+import { BookingStatus, UserRoles, type Review, type User } from "../../../generated/prisma/client"
 import type { ReviewCreateInput } from "../../../generated/prisma/models"
 import { prisma } from "../../lib/prisma";
 
@@ -153,4 +153,56 @@ const updateReview = async (reviewId: string, data: Partial<Review>, studentId: 
 
 
 
-export const reviewService = {createReview, updateReview}
+const getAllReviews = async (user : User, tutorId : string) => {
+
+   if (user.role === UserRoles.STUDENT) {
+      return await prisma.review.findMany({
+        where: {
+          studentId: user.id,
+        },
+        include: {
+          student : true,
+          tutor : true
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    }
+  
+    if (user.role === UserRoles.TUTOR) {
+      return await prisma.review.findMany({
+        where: {
+          tutorId: tutorId,
+        },
+        include: {
+          student : true,
+          tutor : true
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    }
+  
+    if (user.role === UserRoles.ADMIN) {
+      return prisma.review.findMany({
+        include: {
+          student : true,
+          tutor : true
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    }
+  
+    throw new Error("Unauthorized");
+  };
+
+
+
+
+
+
+export const reviewService = {createReview, updateReview, getAllReviews}

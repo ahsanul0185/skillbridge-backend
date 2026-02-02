@@ -6,6 +6,7 @@ import { reviewController } from "./review.controller";
 
 const router = Router()
 
+router.get("/", auth(UserRoles.STUDENT, UserRoles.TUTOR), reviewController.getAllReviews);
 router.post("/create", auth(UserRoles.STUDENT), reviewController.createReview);
 router.put("/update/:reviewId", auth(UserRoles.STUDENT), reviewController.updateReview);
 

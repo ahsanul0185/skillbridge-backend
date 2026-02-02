@@ -14,7 +14,11 @@ const getAllBookings = async (user: User, tutorId: string) => {
         studentId: user.id,
       },
       include: {
-        tutor: true,
+        tutor: {
+          include : {
+            user : true
+          }
+        },
         availability: true,
       },
       orderBy: {
@@ -41,8 +45,23 @@ const getAllBookings = async (user: User, tutorId: string) => {
   if (user.role === UserRoles.ADMIN) {
     return prisma.booking.findMany({
     include: {
-        student: true,
+        student: {
+          select : {
+            name : true,
+            email : true
+          }
+        },
         availability: true,
+        tutor : {
+          include : {
+            user : {
+              select : {
+                name : true,
+                email : true
+              }
+            }
+          }
+        }
       },
       orderBy: {
         createdAt: "desc",
