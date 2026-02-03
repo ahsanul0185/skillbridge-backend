@@ -448,8 +448,8 @@ var auth = betterAuth({
   },
   emailAndPassword: {
     enabled: true,
-    autoSignIn: false,
-    requireEmailVerification: true
+    autoSignIn: false
+    // requireEmailVerification : true
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url, token }) => {
