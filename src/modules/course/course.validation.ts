@@ -1,0 +1,27 @@
+import z from "zod";
+import { CourseLevel } from "../../../generated/prisma/enums";
+import { booleanCoerce, numberCoerce } from "../../utils/validationHelper";
+
+export const createCourseZodSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title is too long"),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    price: numberCoerce.nonnegative("Price cannot be negative"),
+    thumbnailUrl: z.string().url("Thumbnail must be a valid URL").optional().nullable(),
+    level: z.enum([CourseLevel.BEGINNER, CourseLevel.INTERMEDIATE, CourseLevel.ADVANCED]).default(CourseLevel.BEGINNER),
+    duration: z.string().optional().nullable(),
+    isPublished: booleanCoerce.default(false),
+    categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
+    mentorId: z.string().uuid("Invalid mentor ID").optional().nullable(),
+});
+
+export const updateCourseZodSchema = z.object({
+    title: z.string().min(3).max(100).optional(),
+    description: z.string().min(10).optional(),
+    price: numberCoerce.nonnegative().optional(),
+    thumbnailUrl: z.string().url().optional().nullable(),
+    level: z.enum([CourseLevel.BEGINNER, CourseLevel.INTERMEDIATE, CourseLevel.ADVANCED]).optional(),
+    duration: z.string().optional().nullable(),
+    isPublished: booleanCoerce.optional(),
+    categoryId: z.string().uuid().optional().nullable(),
+    mentorId: z.string().uuid().optional().nullable(),
+});

@@ -4,7 +4,7 @@ import cors from "cors"
 import { auth } from "./lib/auth";
 import { userRouter } from "./modules/user/user.router";
 import { tutorRouter } from "./modules/tutor/tutor.router";
-import errorHandler from "./middlewares/errorHandler";
+import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import { notFound } from "./middlewares/notFound";
 import { categoryRouter } from "./modules/category/category.router";
 import { availabilityRouter } from "./modules/availability/availability.router";
@@ -86,8 +86,8 @@ app.get("/", (_, res) => {
 })
 
 
-app.use(errorHandler);
 app.use(notFound);
+app.use(globalErrorHandler);
 
 
 export default app

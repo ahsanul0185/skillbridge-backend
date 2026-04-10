@@ -1,16 +1,18 @@
 import type { NextFunction, Request, Response } from "express";
 import { courseService } from "./course.service";
 import { prisma } from "../../lib/prisma";
+import AppError from "../../errorHelpers/AppError";
+import status from "http-status";
 
 const getInstituteId = async (userId: string) => {
     const profile = await prisma.instituteProfile.findUnique({ where: { userId }});
-    if (!profile) throw new Error("Institute profile not found for this user");
+    if (!profile) throw new AppError(status.NOT_FOUND, "Institute profile not found for this user");
     return profile.id;
 };
 
 const getMentorId = async (userId: string) => {
     const profile = await prisma.mentorProfile.findUnique({ where: { userId }});
-    if (!profile) throw new Error("Mentor profile not found for this user");
+    if (!profile) throw new AppError(status.NOT_FOUND, "Mentor profile not found for this user");
     return profile.id;
 };
 
