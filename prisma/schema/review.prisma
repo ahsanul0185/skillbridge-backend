@@ -3,7 +3,7 @@ model Review {
   bookingId String   @unique
   studentId String
   tutorId   String
-  rating    Decimal  @db.Decimal(2,1)
+  rating    Decimal  @db.Decimal(2, 1)
   review    String
   createdAt DateTime @default(now())
 
@@ -11,7 +11,7 @@ model Review {
   tutor   TutorProfiles @relation(fields: [tutorId], references: [id], onDelete: Cascade)
   booking Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
-    @@index([studentId])
-    @@index([tutorId])
+  @@index([studentId])
+  @@index([tutorId])
   @@map("reviews")
 }

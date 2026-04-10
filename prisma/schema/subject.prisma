@@ -1,12 +1,12 @@
 model Subject {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  categoryId   String
-  createdAt    DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String   @unique
+  categoryId String
+  createdAt  DateTime @default(now())
 
-  category      Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  tutors        TutorSubject[]
-  bookings      Booking[]
+  category Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tutors   TutorSubject[]
+  bookings Booking[]
 
   @@index([categoryId])
   @@map("subjects")

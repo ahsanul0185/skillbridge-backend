@@ -10,11 +10,14 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
-  role            UserRoles
-  status          UserStatus     @default(ACTIVE)
-  tutorProfile    TutorProfiles?
-  studentBookings Booking[]
-  studentReviews  Review[]
+  role              UserRoles
+  status            UserStatus         @default(ACTIVE)
+  tutorProfile      TutorProfiles?
+  instituteProfile  InstituteProfile?
+  mentorProfile     MentorProfile?
+  studentBookings   Booking[]
+  studentReviews    Review[]
+  courseEnrollments CourseEnrollment[]
 
   @@unique([email])
   @@map("user")
@@ -72,6 +75,9 @@ enum UserRoles {
   ADMIN
   TUTOR
   STUDENT
+  INSTITUTE
+  MENTOR
+  MODERATOR
 }
 
 enum UserStatus {
