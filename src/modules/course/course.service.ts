@@ -6,7 +6,11 @@ export const getPublicCourses = async (query: any) => {
     const total = await prisma.course.count({ where: { isPublished: true } });
     const data = await prisma.course.findMany({
         where: { isPublished: true },
-        include: { institute: { select: { name: true, logoUrl: true } }, mentor: { include: { user: { select: { name: true } } } } },
+        include: { 
+            institute: { select: { name: true, logoUrl: true } }, 
+            mentors: { include: { user: { select: { name: true } } } },
+            category: true
+        },
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder }
@@ -17,7 +21,11 @@ export const getPublicCourses = async (query: any) => {
 export const getCourseDetails = async (courseId: string) => {
     return await prisma.course.findUniqueOrThrow({
         where: { id: courseId },
-        include: { institute: { select: { name: true, logoUrl: true, description: true } }, mentor: { include: { user: { select: { name: true, image: true } } } } }
+        include: { 
+            institute: { select: { name: true, logoUrl: true, description: true } }, 
+            mentors: { include: { user: { select: { name: true, image: true } } } },
+            category: true
+        }
     });
 };
 
@@ -26,7 +34,11 @@ export const getInstituteCourses = async (instituteId: string, query: any) => {
     const total = await prisma.course.count({ where: { instituteId } });
     const data = await prisma.course.findMany({
         where: { instituteId },
-        include: { mentor: { include: { user: { select: { name: true } } } }, _count: { select: { enrollments: true } } },
+        include: { 
+            mentors: { include: { user: { select: { name: true } } } }, 
+            _count: { select: { enrollments: true } },
+            category: true
+        },
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder }
@@ -46,7 +58,9 @@ export const createCourse = async (instituteId: string, data: any) => {
             duration: data.duration,
             isPublished: data.isPublished || false,
             categoryId: data.categoryId,
-            mentorId: data.mentorId, // optional assign at creation
+            ...(data.mentorIds?.length
+                ? { mentors: { connect: data.mentorIds.map((id: string) => ({ id })) } }
+                : {}),
         }
     });
 };
@@ -55,9 +69,15 @@ export const updateCourse = async (instituteId: string, courseId: string, data: 
     const course = await prisma.course.findFirst({ where: { id: courseId, instituteId } });
     if (!course) throw new Error("Course not found or access denied");
 
+    const { mentorIds, ...restData } = data;
+    const updateData: any = { ...restData };
+    if (mentorIds) {
+        updateData.mentors = { set: mentorIds.map((id: string) => ({ id })) };
+    }
+
     return await prisma.course.update({
         where: { id: courseId },
-        data
+        data: updateData
     });
 };
 
@@ -71,10 +91,13 @@ export const deleteCourse = async (instituteId: string, courseId: string) => {
 
 export const getAssignedCourses = async (mentorId: string, query: any) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
-    const total = await prisma.course.count({ where: { mentorId } });
+    const total = await prisma.course.count({ where: { mentors: { some: { id: mentorId } } } });
     const data = await prisma.course.findMany({
-        where: { mentorId },
-        include: { _count: { select: { enrollments: true } } },
+        where: { mentors: { some: { id: mentorId } } },
+        include: { 
+            _count: { select: { enrollments: true } },
+            category: true
+        },
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder }
@@ -83,7 +106,7 @@ export const getAssignedCourses = async (mentorId: string, query: any) => {
 };
 
 export const getCourseRoster = async (mentorId: string, courseId: string, query: any) => {
-    const course = await prisma.course.findFirst({ where: { id: courseId, mentorId } });
+    const course = await prisma.course.findFirst({ where: { id: courseId, mentors: { some: { id: mentorId } } } });
     if (!course) throw new Error("Course not found or access denied");
 
     const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
@@ -103,7 +126,15 @@ export const getEnrolledCourses = async (studentId: string, query: any) => {
     const total = await prisma.courseEnrollment.count({ where: { studentId } });
     const data = await prisma.courseEnrollment.findMany({
         where: { studentId },
-        include: { course: { include: { mentor: { include: { user: { select: { name: true } } } }, institute: { select: { name: true } } } } },
+        include: { 
+            course: { 
+                include: { 
+                    mentors: { include: { user: { select: { name: true } } } }, 
+                    institute: { select: { name: true } },
+                    category: true
+                } 
+            } 
+        },
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder }

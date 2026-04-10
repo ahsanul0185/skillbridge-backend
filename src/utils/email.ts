@@ -3,6 +3,8 @@ import nodemailer from "nodemailer";
 import path from "path";
 import { envVars } from "../config/env";
 
+console.log(envVars.EMAIL_SENDER.SMTP_HOST, envVars.EMAIL_SENDER.SMTP_USER, envVars.EMAIL_SENDER.SMTP_PASS, envVars.EMAIL_SENDER.SMTP_PORT)
+
 const transporter = nodemailer.createTransport({
     host: envVars.EMAIL_SENDER.SMTP_HOST,
     secure: true,
@@ -32,6 +34,9 @@ export const sendEmail = async ({
     to,
     attachments,
 }: SendEmailOptions): Promise<void> => {
+
+    console.log(envVars.EMAIL_SENDER.SMTP_HOST, envVars.EMAIL_SENDER.SMTP_USER, envVars.EMAIL_SENDER.SMTP_PASS, envVars.EMAIL_SENDER.SMTP_PORT)
+
     try {
         const templatePath = path.resolve(
             process.cwd(),
@@ -52,7 +57,19 @@ export const sendEmail = async ({
             })),
         });
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        throw new Error(`Email could not be sent: ${message}`);
+        console.error("\n============= EMAIL SENDING FAILED =============");
+        console.error("SMTP Error:", error instanceof Error ? error.message : String(error));
+        console.error("\nBut don't worry! For development, here is the simulated email data:");
+        console.error("To:", to);
+        console.error("Subject:", subject);
+        if (templateData.inviteUrl) console.error("URL:", templateData.inviteUrl);
+        if (templateData.acceptUrl) console.error("URL:", templateData.acceptUrl);
+        if (templateData.url) console.error("URL:", templateData.url);
+        console.error("================================================\n");
+
+        if (envVars.NODE_ENV !== "development") {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`Email could not be sent: ${message}`);
+        }
     }
 };

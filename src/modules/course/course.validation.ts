@@ -11,7 +11,7 @@ export const createCourseZodSchema = z.object({
     duration: z.string().optional().nullable(),
     isPublished: booleanCoerce.default(false),
     categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
-    mentorId: z.string().uuid("Invalid mentor ID").optional().nullable(),
+    mentorIds: z.array(z.string().uuid("Invalid mentor ID")).optional(),
 });
 
 export const updateCourseZodSchema = z.object({
@@ -23,5 +23,5 @@ export const updateCourseZodSchema = z.object({
     duration: z.string().optional().nullable(),
     isPublished: booleanCoerce.optional(),
     categoryId: z.string().uuid().optional().nullable(),
-    mentorId: z.string().uuid().optional().nullable(),
+    mentorIds: z.array(z.string().uuid()).optional(),
 });

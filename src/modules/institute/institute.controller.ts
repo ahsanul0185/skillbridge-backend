@@ -72,10 +72,43 @@ const removeMentor = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
+const listInstituteStudents = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const instituteId = await getInstituteId(req.user!.id as string);
+        const result = await instituteService.listStudents(instituteId, req.query);
+        return res.status(status.OK).json({ success: true, message: "Students retrieved successfully", data: result });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const listInstituteReviews = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const instituteId = await getInstituteId(req.user!.id as string);
+        const result = await instituteService.listReviews(instituteId, req.query);
+        return res.status(status.OK).json({ success: true, message: "Reviews retrieved successfully", data: result });
+    } catch (e) {
+        next(e);
+    }
+};
+
+const listInstitutePayments = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const instituteId = await getInstituteId(req.user!.id as string);
+        const result = await instituteService.listPayments(instituteId, req.query);
+        return res.status(status.OK).json({ success: true, message: "Payments retrieved successfully", data: result });
+    } catch (e) {
+        next(e);
+    }
+};
+
 export const instituteController = {
     getOverview,
     listMentors,
     inviteMentor,
     updateMentorProfile,
-    removeMentor
+    removeMentor,
+    listInstituteStudents,
+    listInstituteReviews,
+    listInstitutePayments
 };
