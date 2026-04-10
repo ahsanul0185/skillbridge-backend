@@ -46,8 +46,9 @@ model CourseEnrollment {
   status     String   @default("ACTIVE")
   enrolledAt DateTime @default(now())
 
-  student User   @relation(fields: [studentId], references: [id])
-  course  Course @relation(fields: [courseId], references: [id])
+  student User     @relation(fields: [studentId], references: [id])
+  course  Course   @relation(fields: [courseId], references: [id])
+  payment Payment?
 
   @@unique([studentId, courseId])
   @@map("course_enrollments")

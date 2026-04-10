@@ -10,6 +10,7 @@ import { categoryRouter } from "./modules/category/category.router";
 import { availabilityRouter } from "./modules/availability/availability.router";
 import { bookingRouter } from "./modules/booking/booking.router";
 import { reviewRouter } from "./modules/review/review.router";
+import { paymentRouter } from "./modules/payment/payment.router";
  
 console.log(process.env.APP_URL)
 
@@ -59,6 +60,10 @@ app.use(
 
 
 
+
+// ⚠️ Stripe webhook MUST be registered before express.json()
+// The webhook requires the raw body — express.json() would break it.
+app.use("/api/payments", paymentRouter);
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 app.use(express.json());

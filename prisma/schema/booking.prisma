@@ -14,6 +14,7 @@ model Booking {
   subject      Subject?      @relation(fields: [subjectId], references: [id])
   availability Availability? @relation(fields: [availabilityId], references: [id], onDelete: SetNull)
   review       Review?
+  payment      Payment?
 
   @@index([studentId, tutorId])
   @@map("bookings")

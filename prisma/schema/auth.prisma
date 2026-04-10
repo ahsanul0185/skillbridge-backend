@@ -18,6 +18,7 @@ model User {
   studentBookings   Booking[]
   studentReviews    Review[]
   courseEnrollments CourseEnrollment[]
+  payments          Payment[]
 
   @@unique([email])
   @@map("user")
