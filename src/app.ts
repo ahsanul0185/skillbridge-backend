@@ -11,6 +11,9 @@ import { availabilityRouter } from "./modules/availability/availability.router";
 import { bookingRouter } from "./modules/booking/booking.router";
 import { reviewRouter } from "./modules/review/review.router";
 import { paymentRouter } from "./modules/payment/payment.router";
+import { instituteRouter } from "./modules/institute/institute.router";
+import { mentorRouter } from "./modules/mentor/mentor.router";
+import { courseRouter } from "./modules/course/course.router";
  
 console.log(process.env.APP_URL)
 
@@ -74,6 +77,9 @@ app.use("/api/categories", categoryRouter);
 app.use("/api/availability", availabilityRouter);
 app.use("/api/bookings", bookingRouter);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/institutes", instituteRouter);
+app.use("/api/mentors", mentorRouter);
+app.use("/api/courses", courseRouter);
 
 app.get("/", (_, res) => {
     res.json("Welcome to Skillbridge server")

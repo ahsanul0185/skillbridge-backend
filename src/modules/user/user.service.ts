@@ -6,6 +6,9 @@ import {
 } from "../../../generated/prisma/client";
 import { auth } from "../../lib/auth";
 import { prisma } from "../../lib/prisma";
+import crypto from "crypto";
+import { sendEmail } from "../../utils/email";
+import { envVars } from "../../config/env";
 
 type PaginationInput = {
   page: number;
@@ -234,11 +237,51 @@ const getAdminAnalytics = async () => {
   });
 };
 
+const inviteModerator = async (email: string, name: string) => {
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    throw new Error("User already exists with this email");
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  // Keep a single invite valid for moderation per email
+  await prisma.verification.deleteMany({
+    where: { identifier: `invite:moderator:${email}` }
+  });
+
+  await prisma.verification.create({
+    data: {
+      id: crypto.randomUUID(),
+      identifier: `invite:moderator:${email}`,
+      value: token,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+    },
+  });
+
+  const inviteUrl = `${envVars.APP_URL}/accept-invite?token=${token}&email=${encodeURIComponent(email)}&role=${UserRoles.MODERATOR}&name=${encodeURIComponent(name)}`;
+
+  await sendEmail({
+    to: email,
+    subject: "You're Invited to SkillBridge",
+    templateName: "invite",
+    templateData: {
+      invitedName: name,
+      roleName: "Moderator",
+      inviterName: "SkillBridge Admin",
+      inviteUrl,
+    },
+  });
+
+  return { message: "Invitation sent successfully" };
+};
+
 export const userService = {
   getUser,
   listUsers,
   updateUserStatus,
   updateUserData,
   getStudentStats,
-  getAdminAnalytics
+  getAdminAnalytics,
+  inviteModerator
 };

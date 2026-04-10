@@ -82,6 +82,21 @@ export const auth = betterAuth({
                         message : "You can't sign up as admin"
                     });
                 }
+                if (ctx.body.role === UserRoles.MODERATOR || ctx.body.role === UserRoles.MENTOR) {
+                    const inviteToken = ctx.headers?.get("x-invite-token");
+                    if (!inviteToken) {
+                        throw new APIError("BAD_REQUEST", { message : "You cannot register as a moderator or mentor without an invite code" });
+                    }
+                    const verification = await prisma.verification.findFirst({
+                        where: { 
+                            identifier: { endsWith: `:${ctx.body.email}` },
+                            value: inviteToken 
+                        }
+                    });
+                    if (!verification || verification.expiresAt < new Date()) {
+                        throw new APIError("BAD_REQUEST", { message : "Invalid or expired invite" });
+                    }
+                }
             }
         }),
     },
@@ -96,6 +111,39 @@ export const auth = betterAuth({
                                     userId : user.id
                                 }
                             })
+                        } else if (user.role === UserRoles.INSTITUTE) {
+                            await prisma.instituteProfile.create({
+                                data: {
+                                    userId: user.id,
+                                    name: user.name,
+                                }
+                            })
+                        }
+                        
+                        if (user.role === UserRoles.MODERATOR || user.role === UserRoles.MENTOR) {
+                            
+                            if (user.role === UserRoles.MENTOR) {
+                                const verification = await prisma.verification.findFirst({
+                                    where: { identifier: { startsWith: 'invite:mentor:', endsWith: `:${user.email}` } }
+                                });
+                                if (verification) {
+                                    const instituteId = verification.identifier.split(':')[2] as string;
+                                    await prisma.mentorProfile.create({
+                                        data: {
+                                            userId: user.id,
+                                            instituteId: instituteId
+                                        }
+                                    });
+                                }
+                            }
+
+                            await prisma.verification.deleteMany({
+                                where: { identifier: { endsWith: `:${user.email}` } }
+                            });
+                            await prisma.user.update({
+                                where: { id: user.id },
+                                data: { emailVerified: true }
+                            });
                         }
                     } catch (error) {
                         console.log(error)

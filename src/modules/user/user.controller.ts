@@ -74,4 +74,25 @@ const getAdminAnalytics = async (req : Request, res : Response, next : NextFunct
 
 
 
-export const userController = {getUser, listUsers, updateUserStatus, updateUserData, getStudentStats, getAdminAnalytics}
+const inviteModerator = async (req : Request, res : Response, next : NextFunction) => {
+    try {
+        const { email, name } = req.body;
+        if (!email || !name) {
+            return res.status(400).json({success: false, message: "Email and name are required"});
+        }
+        const result = await userService.inviteModerator(email, name);
+        return res.status(200).json({success : true, message : "Invitation sent successfully", data : result})
+    } catch (e) {
+        next(e)
+    }
+}
+
+export const userController = {
+  getUser, 
+  listUsers, 
+  updateUserStatus, 
+  updateUserData, 
+  getStudentStats, 
+  getAdminAnalytics,
+  inviteModerator
+}
