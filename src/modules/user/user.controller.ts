@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { userService } from "./user.service";
-import type { User } from "../../../generated/prisma/client";
+import type { User, UserRoles } from "../../../generated/prisma/client";
 import paginationSortingHelper from "../../utils/paginationHelper";
 import AppError from "../../errorHelpers/AppError";
 import status from "http-status";
@@ -19,8 +19,9 @@ const listUsers = async (req : Request, res : Response, next : NextFunction) => 
     try {
 
         const paginations = paginationSortingHelper(req.query);
+        const role = req.query.role as UserRoles;
 
-        const result = await userService.listUsers(paginations)
+        const result = await userService.listUsers({ ...paginations, role })
         return res.status(200).json({success : true, message : "Users data retrieved successfully", data : result})
     } catch (e) {
         next(e)

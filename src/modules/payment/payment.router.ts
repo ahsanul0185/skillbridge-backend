@@ -48,4 +48,11 @@ router.get(
     paymentController.getTutorPayments
 );
 
+// Admin-only route to list all payments on the platform
+router.get(
+    "/",
+    auth(UserRoles.ADMIN),
+    paymentController.listAllPayments
+);
+
 export const paymentRouter = router;

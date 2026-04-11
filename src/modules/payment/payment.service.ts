@@ -5,6 +5,7 @@ import { stripe } from "../../config/stripe.config";
 import { envVars } from "../../config/env";
 import { sendEmail } from "../../utils/email";
 import type { User } from "../../../generated/prisma/client";
+import paginationSortingHelper from "../../utils/paginationHelper";
 
 // ─── Webhook Handler ─────────────────────────────────────────────────────────
 
@@ -403,6 +404,43 @@ const verifySession = async (sessionId: string) => {
     }
 };
 
+const listAllPayments = async (query: any) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
+
+    const total = await prisma.payment.count();
+    const data = await prisma.payment.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+            [sortBy]: sortOrder,
+        },
+        include: {
+            student: { select: { name: true, email: true, image: true } },
+            booking: {
+                include: {
+                    tutor: { include: { user: { select: { name: true } } } },
+                    subject: { select: { name: true } },
+                },
+            },
+            courseEnrollment: {
+                include: {
+                    course: { select: { title: true } },
+                },
+            },
+        },
+    });
+
+    return {
+        data,
+        pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};
+
 export const paymentService = {
     handleStripeWebhookEvent,
     createBookingCheckoutSession,
@@ -410,4 +448,5 @@ export const paymentService = {
     getMyPayments,
     getTutorPayments,
     verifySession,
+    listAllPayments,
 };

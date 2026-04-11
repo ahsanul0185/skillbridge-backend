@@ -14,6 +14,7 @@ import { paymentRouter } from "./modules/payment/payment.router";
 import { instituteRouter } from "./modules/institute/institute.router";
 import { mentorRouter } from "./modules/mentor/mentor.router";
 import { courseRouter } from "./modules/course/course.router";
+import { aiRouter } from "./modules/ai/ai.router";
  
 console.log(process.env.APP_URL)
 
@@ -80,6 +81,7 @@ app.use("/api/reviews", reviewRouter);
 app.use("/api/institutes", instituteRouter);
 app.use("/api/mentors", mentorRouter);
 app.use("/api/courses", courseRouter);
+app.use("/api/ai", aiRouter);
 
 app.get("/", (_, res) => {
     res.json("Welcome to Skillbridge server")

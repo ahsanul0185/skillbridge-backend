@@ -119,6 +119,19 @@ const getTutorPayments = async (
     }
 };
 
+const listAllPayments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const data = await paymentService.listAllPayments(req.query);
+        return res.status(200).json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const paymentController = {
     handleStripeWebhook,
     createBookingPayment,
@@ -126,4 +139,5 @@ export const paymentController = {
     getMyPayments,
     getTutorPayments,
     verifySession,
+    listAllPayments,
 };

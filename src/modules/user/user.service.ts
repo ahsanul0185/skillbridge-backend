@@ -16,6 +16,7 @@ type PaginationInput = {
   skip: number;
   sortBy: string;
   sortOrder: string;
+  role?: UserRoles;
 };
 
 const listUsers = async ({
@@ -24,10 +25,16 @@ const listUsers = async ({
   sortBy,
   skip,
   sortOrder,
+  role,
 }: PaginationInput) => {
-  const total = await prisma.user.count({});
+  const whereCondition = role ? { role } : {};
+
+  const total = await prisma.user.count({
+    where: whereCondition,
+  });
 
   const result = await prisma.user.findMany({
+    where: whereCondition,
     take: limit,
     skip,
     orderBy: {
@@ -251,56 +258,96 @@ const getStudentStats = async (studentId: string) => {
 
 const getAdminAnalytics = async () => {
   return await prisma.$transaction(async (tx) => {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
     const [
       totalUsers,
       totalStudents,
       totalTutors,
+      totalInstitutes,
       totalBookings,
       completedBookings,
       totalRevenue,
       totalReviews,
-      averageRating
+      averageRating,
+      allRolesDistribution,
+      bookingStatusDistribution,
+      monthlyRevenue,
+      monthlyUserGrowth
     ] = await Promise.all([
       tx.user.count(),
-
-      tx.user.count({
-        where: { role: 'STUDENT' }
-      }),
-      
-      tx.user.count({
-        where: { role: 'TUTOR' }
-      }),
-      
+      tx.user.count({ where: { role: 'STUDENT' } }),
+      tx.user.count({ where: { role: 'TUTOR' } }),
+      tx.user.count({ where: { role: 'INSTITUTE' } }),
       tx.booking.count(),
-      
-      tx.booking.count({
-        where: { status: 'COMPLETED' }
+      tx.booking.count({ where: { status: 'COMPLETED' } }),
+      tx.payment.aggregate({
+        where: { status: 'COMPLETED' },
+        _sum: { amount: true }
       }),
-      
-      tx.booking.aggregate({
-        _sum: {
-          price: true
-        }
-      }),
-      
       tx.review.count(),
+      tx.review.aggregate({ _avg: { rating: true } }),
       
-      tx.review.aggregate({
-        _avg: {
-          rating: true
-        }
+      // Distributions
+      tx.user.groupBy({
+        by: ["role"],
+        _count: { _all: true }
+      }),
+      tx.booking.groupBy({
+        by: ["status"],
+        _count: { _all: true }
+      }),
+
+      // Trends
+      tx.payment.findMany({
+        where: { status: "COMPLETED", createdAt: { gte: sixMonthsAgo } },
+        select: { amount: true, createdAt: true }
+      }),
+      tx.user.findMany({
+        where: { createdAt: { gte: sixMonthsAgo } },
+        select: { role: true, createdAt: true }
       })
     ]);
+
+    // Format Trends
+    const monthMap: Record<string, { revenue: number; signups: number }> = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      monthMap[key] = { revenue: 0, signups: 0 };
+    }
+
+    for (const p of monthlyRevenue) {
+      const key = new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      if (monthMap[key]) monthMap[key].revenue += p.amount;
+    }
+    for (const u of monthlyUserGrowth) {
+      const key = new Date(u.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      if (monthMap[key]) monthMap[key].signups += 1;
+    }
+
+    const platformTrend = Object.entries(monthMap).map(([month, data]) => ({
+      month,
+      ...data
+    }));
 
     return {
       totalUsers,
       totalStudents,
       totalTutors,
+      totalInstitutes,
       totalBookings,
       completedBookings,
-      totalRevenue: totalRevenue._sum.price || 0,
+      totalRevenue: totalRevenue._sum.amount || 0,
       totalReviews,
-      averageRating: averageRating._avg.rating || 0
+      averageRating: averageRating._avg.rating || 0,
+      roleDistribution: allRolesDistribution.map(r => ({ name: r.role, value: r._count._all })),
+      bookingDistribution: bookingStatusDistribution.map(b => ({ name: b.status, value: b._count._all })),
+      platformTrend
     };
   });
 };
