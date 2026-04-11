@@ -111,72 +111,140 @@ const updateUserStatus = async (status: UserStatus, userId: string) => {
 
 const getStudentStats = async (studentId: string) => {
   return await prisma.$transaction(async (tx) => {
+    // ── Stat Counts ──────────────────────────────────────────────
     const [
       totalBookings,
       upcomingBookings,
       completedBookings,
-      totalSpent,
+      totalEnrolledCourses,
       totalReviews,
     ] = await Promise.all([
       tx.booking.count({ where: { studentId } }),
-
       tx.booking.findMany({
-        where: { studentId, status: BookingStatus.CONFIRMED },
-        take: 5,
-        orderBy: {
-          createdAt: "asc",
+        where: { 
+            studentId, 
+            status: { in: [BookingStatus.CONFIRMED, BookingStatus.PENDING] } 
         },
+        take: 3,
+        orderBy: { createdAt: "asc" },
         include: {
-          tutor: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                  image: true,
-                },
-              },
-            },
-          },
-          subject: {
-            select: {
-              name: true,
-            },
-          },
-          availability: {
-            select: {
-              day: true,
-              startTime: true,
-              endTime: true,
-            },
-          },
+          tutor: { include: { user: { select: { name: true, image: true } } } },
+          subject: { select: { name: true } },
+          availability: { select: { day: true, startTime: true, endTime: true } },
         },
       }),
-
       tx.booking.count({
-        where: {
-          studentId,
-          status: BookingStatus.COMPLETED,
-        },
+        where: { studentId, status: BookingStatus.COMPLETED },
       }),
-
-      tx.booking.aggregate({
-        where: { studentId },
-        _sum: {
-          price: true,
-        },
+      tx.courseEnrollment.count({
+        where: { studentId, status: "ACTIVE" },
       }),
-
       tx.review.count({
         where: { studentId },
       }),
     ]);
 
+    // ── Total Spent (Sum of all completed payments) ─────────────
+    const totalSpentResult = await tx.payment.aggregate({
+      where: { studentId, status: "COMPLETED" },
+      _sum: { amount: true },
+    });
+    const totalSpent = totalSpentResult._sum.amount ?? 0;
+
+    // ── Service Mix (Donut Chart) ───────────────────────────────
+    // Spending on Courses vs Bookings
+    const coursePaymentSum = await tx.payment.aggregate({
+      where: { studentId, status: "COMPLETED", NOT: { courseEnrollmentId: null } },
+      _sum: { amount: true }
+    });
+    const bookingPaymentSum = await tx.payment.aggregate({
+      where: { studentId, status: "COMPLETED", NOT: { bookingId: null } },
+      _sum: { amount: true }
+    });
+
+    const serviceMix = [
+      { name: "Courses", value: coursePaymentSum._sum.amount ?? 0 },
+      { name: "Tutoring", value: bookingPaymentSum._sum.amount ?? 0 }
+    ];
+
+    // ── Category Distribution (Bar/Donut) ──────────────────────
+    const categoryGroups = await tx.courseEnrollment.findMany({
+      where: { studentId, status: "ACTIVE" },
+      include: {
+        course: { include: { category: true } }
+      }
+    });
+
+    const categoryMap: Record<string, number> = {};
+    categoryGroups.forEach(enrollment => {
+      const catName = enrollment.course.category?.name || "Other";
+      categoryMap[catName] = (categoryMap[catName] || 0) + 1;
+    });
+
+    const categoryDistribution = Object.entries(categoryMap).map(([name, value]) => ({
+      name,
+      value
+    }));
+
+    // ── Spending Trend – last 6 months (Line Chart) ────────────
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const recentPayments = await tx.payment.findMany({
+      where: {
+        studentId,
+        status: "COMPLETED",
+        createdAt: { gte: sixMonthsAgo }
+      },
+      select: { amount: true, createdAt: true }
+    });
+
+    const monthMap: Record<string, number> = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      monthMap[key] = 0;
+    }
+    for (const p of recentPayments) {
+      const key = new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      if (monthMap[key] !== undefined) {
+        monthMap[key] += p.amount;
+      }
+    }
+    const spendingTrend = Object.entries(monthMap).map(([month, amount]) => ({
+      month,
+      amount,
+    }));
+
+    // ── Recent Enrollments ──────────────────────────────────────
+    const recentEnrollments = await tx.courseEnrollment.findMany({
+      where: { studentId, status: "ACTIVE" },
+      include: {
+        course: {
+          include: {
+            institute: { select: { name: true } },
+            category: true
+          }
+        }
+      },
+      orderBy: { enrolledAt: "desc" },
+      take: 4
+    });
+
     return {
       totalBookings,
       upcomingBookings,
       completedBookings,
-      totalSpent: totalSpent._sum.price || 0,
+      totalEnrolledCourses,
+      totalSpent,
       totalReviews,
+      serviceMix,
+      categoryDistribution,
+      spendingTrend,
+      recentEnrollments
     };
   });
 };

@@ -89,9 +89,41 @@ const getMyPayments = async (
     }
 };
 
+const verifySession = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const sessionId = req.params.sessionId as string;
+        if (!sessionId) {
+            return res.status(400).json({ success: false, message: "Session ID is required" });
+        }
+        const result = await paymentService.verifySession(sessionId);
+        return res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getTutorPayments = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const data = await paymentService.getTutorPayments(req.user!.id as string);
+        return res.status(200).json({ success: true, data });
+    } catch (error) {
+        next(error);
+    }
+};
+
 export const paymentController = {
     handleStripeWebhook,
     createBookingPayment,
     createCoursePayment,
     getMyPayments,
+    getTutorPayments,
+    verifySession,
 };

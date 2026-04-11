@@ -4,7 +4,7 @@ model Booking {
   tutorId        String
   subjectId      String?
   availabilityId String?
-  status         BookingStatus @default(CONFIRMED)
+  status         BookingStatus @default(PENDING)
   price          Int
   createdAt      DateTime      @default(now())
   completedAt    DateTime?
@@ -21,6 +21,7 @@ model Booking {
 }
 
 enum BookingStatus {
+  PENDING
   CONFIRMED
   COMPLETED
   CANCELLED

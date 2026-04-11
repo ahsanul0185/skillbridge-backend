@@ -327,7 +327,7 @@ const getTutorDashboardOverview = async (user: User) => {
             tx.booking.findMany({
                 where: {
                     tutorId: tutorProfile.id,
-                    status: "CONFIRMED"
+                    status: { in: ["CONFIRMED", "PENDING"] }
                 },
                 orderBy: {
                     createdAt: "desc"

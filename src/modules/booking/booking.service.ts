@@ -180,15 +180,6 @@ const createBooking = async (data: Booking, studentId: string) => {
   const price = (tutorInfo.hourlyRate as number) * duration;
 
   return prisma.$transaction(async (tx) => {
-    await tx.availability.update({
-      where: {
-        id: availabilityId as string,
-      },
-      data: {
-        status: AvailabilityStatus.BOOKED,
-      },
-    });
-
     return await tx.booking.create({
       data: {
         studentId,
@@ -196,6 +187,7 @@ const createBooking = async (data: Booking, studentId: string) => {
         availabilityId,
         price,
         subjectId,
+        status: BookingStatus.PENDING,
       },
     });
   });

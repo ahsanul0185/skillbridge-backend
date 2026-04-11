@@ -3,13 +3,27 @@ import paginationSortingHelper from "../../utils/paginationHelper";
 
 export const getPublicCourses = async (query: any) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
-    const total = await prisma.course.count({ where: { isPublished: true } });
+
+    const where: any = { isPublished: true };
+
+    if (query.search) {
+        where.OR = [
+            { title: { contains: query.search, mode: "insensitive" } },
+            { description: { contains: query.search, mode: "insensitive" } },
+        ];
+    }
+    if (query.categoryId) where.categoryId = query.categoryId;
+    if (query.level) where.level = query.level;
+    if (query.maxPrice) where.price = { lte: Number(query.maxPrice) };
+
+    const total = await prisma.course.count({ where });
     const data = await prisma.course.findMany({
-        where: { isPublished: true },
+        where,
         include: { 
             institute: { select: { name: true, logoUrl: true } }, 
-            mentors: { include: { user: { select: { name: true } } } },
-            category: true
+            mentors: { include: { user: { select: { name: true, image: true } } } },
+            category: true,
+            _count: { select: { enrollments: true } }
         },
         skip,
         take: limit,
@@ -24,7 +38,8 @@ export const getCourseDetails = async (courseId: string) => {
         include: { 
             institute: { select: { name: true, logoUrl: true, description: true } }, 
             mentors: { include: { user: { select: { name: true, image: true } } } },
-            category: true
+            category: true,
+            _count: { select: { enrollments: true } }
         }
     });
 };
@@ -122,10 +137,11 @@ export const getCourseRoster = async (mentorId: string, courseId: string, query:
 };
 
 export const getEnrolledCourses = async (studentId: string, query: any) => {
-    const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
-    const total = await prisma.courseEnrollment.count({ where: { studentId } });
+    let { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(query);
+    if (sortBy === "createdAt") sortBy = "enrolledAt";
+    const total = await prisma.courseEnrollment.count({ where: { studentId, status: "ACTIVE" } });
     const data = await prisma.courseEnrollment.findMany({
-        where: { studentId },
+        where: { studentId, status: "ACTIVE" },
         include: { 
             course: { 
                 include: { 
@@ -139,6 +155,7 @@ export const getEnrolledCourses = async (studentId: string, query: any) => {
         take: limit,
         orderBy: { [sortBy]: sortOrder }
     });
+    console.log(data)
     return { data, pagination: { total, page, limit, totalPages: Math.ceil(total / limit) } };
 };
 

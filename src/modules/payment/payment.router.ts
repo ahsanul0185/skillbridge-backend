@@ -34,4 +34,18 @@ router.get(
     paymentController.getMyPayments
 );
 
+// Verify a checkout session
+router.get(
+    "/verify/:sessionId",
+    auth(UserRoles.STUDENT),
+    paymentController.verifySession
+);
+
+// View all payment history for the logged-in tutor
+router.get(
+    "/tutor",
+    auth(UserRoles.TUTOR),
+    paymentController.getTutorPayments
+);
+
 export const paymentRouter = router;
