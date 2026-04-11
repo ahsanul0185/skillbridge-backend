@@ -47,7 +47,10 @@ const updateUserStatus = async (req : Request, res : Response, next : NextFuncti
 
 const updateUserData = async (req : Request, res : Response, next : NextFunction) => {
     try {
-        const result = await userService.updateUserData(req.body, req.user as User)
+        const body: any = { ...req.body };
+        if (req.file?.path) body.image = req.file.path;
+
+        const result = await userService.updateUserData(body, req.user as User)
 
         return res.status(200).json({success : true, message : "Updated successfully", data : result})
     } catch (e) {

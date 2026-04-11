@@ -102,6 +102,20 @@ const listInstitutePayments = async (req: Request, res: Response, next: NextFunc
     }
 };
 
+const updateInstituteProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const instituteId = await getInstituteId(req.user!.id as string);
+        const body: any = { ...req.body };
+        if (req.file?.path) body.logoUrl = req.file.path;
+        if (body.establishedYear) body.establishedYear = Number(body.establishedYear);
+
+        const result = await instituteService.updateInstituteProfile(instituteId, body);
+        return res.status(status.OK).json({ success: true, message: "Institute profile updated", data: result });
+    } catch (e) {
+        next(e);
+    }
+};
+
 export const instituteController = {
     getOverview,
     listMentors,
@@ -110,5 +124,6 @@ export const instituteController = {
     removeMentor,
     listInstituteStudents,
     listInstituteReviews,
-    listInstitutePayments
+    listInstitutePayments,
+    updateInstituteProfile
 };

@@ -69,6 +69,7 @@ const getUser = async (user: User) => {
           },
         },
       },
+      instituteProfile: user.role === UserRoles.INSTITUTE,
     },
   });
 };

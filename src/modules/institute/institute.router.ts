@@ -16,4 +16,8 @@ router.post("/mentors/invite", auth(UserRoles.INSTITUTE), validateRequest(invite
 router.put("/mentors/update/:mentorId", auth(UserRoles.INSTITUTE), instituteController.updateMentorProfile);
 router.delete("/mentors/delete/:mentorId", auth(UserRoles.INSTITUTE), instituteController.removeMentor);
 
+import { uploadProfilePhoto } from "../../config/multer.config";
+
+router.put("/update", auth(UserRoles.INSTITUTE), uploadProfilePhoto, instituteController.updateInstituteProfile);
+
 export const instituteRouter = router;

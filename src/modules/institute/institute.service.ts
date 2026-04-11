@@ -301,6 +301,20 @@ const listPayments = async (instituteId: string, query: any) => {
     };
 };
 
+const updateInstituteProfile = async (instituteId: string, data: any) => {
+    return await prisma.instituteProfile.update({
+        where: { id: instituteId },
+        data: {
+            name: data.name,
+            description: data.description,
+            logoUrl: data.logoUrl,
+            contactEmail: data.contactEmail,
+            website: data.website,
+            establishedYear: data.establishedYear
+        }
+    });
+};
+
 export const instituteService = {
   getOverview,
   listMentors,
@@ -309,5 +323,6 @@ export const instituteService = {
   removeMentor,
   listStudents,
   listReviews,
-  listPayments
+  listPayments,
+  updateInstituteProfile
 };
