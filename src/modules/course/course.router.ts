@@ -1,9 +1,8 @@
 import { Router } from "express";
 import { UserRoles } from "../../../generated/prisma/enums";
 import { auth } from "../../middlewares/auth";
-import { validateRequest } from "../../middlewares/validateRequest";
 import { courseController } from "./course.controller";
-import { createCourseZodSchema, updateCourseZodSchema } from "./course.validation";
+import { uploadCourseThumbnail } from "../../config/multer.config";
 
 const router = Router();
 
@@ -12,8 +11,8 @@ router.get("/", courseController.getPublicCourses);
 
 // Institute routes
 router.get("/institute/list", auth(UserRoles.INSTITUTE), courseController.getInstituteCourses);
-router.post("/create", auth(UserRoles.INSTITUTE), validateRequest(createCourseZodSchema), courseController.createCourse);
-router.put("/update/:courseId", auth(UserRoles.INSTITUTE), validateRequest(updateCourseZodSchema), courseController.updateCourse);
+router.post("/create", auth(UserRoles.INSTITUTE), uploadCourseThumbnail, courseController.createCourse);
+router.put("/update/:courseId", auth(UserRoles.INSTITUTE), uploadCourseThumbnail, courseController.updateCourse);
 router.delete("/delete/:courseId", auth(UserRoles.INSTITUTE), courseController.deleteCourse);
 
 // Mentor routes

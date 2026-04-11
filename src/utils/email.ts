@@ -3,8 +3,6 @@ import nodemailer from "nodemailer";
 import path from "path";
 import { envVars } from "../config/env";
 
-console.log(envVars.EMAIL_SENDER.SMTP_HOST, envVars.EMAIL_SENDER.SMTP_USER, envVars.EMAIL_SENDER.SMTP_PASS, envVars.EMAIL_SENDER.SMTP_PORT)
-
 const transporter = nodemailer.createTransport({
     host: envVars.EMAIL_SENDER.SMTP_HOST,
     secure: true,

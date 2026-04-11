@@ -47,7 +47,17 @@ const getInstituteCourses = async (req: Request, res: Response, next: NextFuncti
 const createCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const instituteId = await getInstituteId(req.user!.id as string);
-        const result = await courseService.createCourse(instituteId, req.body);
+
+        // multipart/form-data — all fields arrive as strings; coerce back to correct types.
+        const body: any = { ...req.body };
+        if (req.file?.path)  body.thumbnailUrl = req.file.path;              // Cloudinary URL
+        if (body.price      !== undefined) body.price      = parseFloat(body.price);
+        if (body.isPublished !== undefined) body.isPublished = body.isPublished === "true";
+        if (body.mentorIds !== undefined) {
+            body.mentorIds = Array.isArray(body.mentorIds) ? body.mentorIds : [body.mentorIds];
+        }
+
+        const result = await courseService.createCourse(instituteId, body);
         res.status(201).json({ success: true, message: "Course created successfully", data: result });
     } catch (error) {
         next(error);
@@ -57,7 +67,17 @@ const createCourse = async (req: Request, res: Response, next: NextFunction) => 
 const updateCourse = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const instituteId = await getInstituteId(req.user!.id as string);
-        const result = await courseService.updateCourse(instituteId, req.params.courseId as string, req.body);
+
+        // multipart/form-data — all fields arrive as strings; coerce back to correct types.
+        const body: any = { ...req.body };
+        if (req.file?.path)  body.thumbnailUrl = req.file.path;              // Cloudinary URL
+        if (body.price      !== undefined) body.price      = parseFloat(body.price);
+        if (body.isPublished !== undefined) body.isPublished = body.isPublished === "true";
+        if (body.mentorIds !== undefined) {
+            body.mentorIds = Array.isArray(body.mentorIds) ? body.mentorIds : [body.mentorIds];
+        }
+
+        const result = await courseService.updateCourse(instituteId, req.params.courseId as string, body);
         res.status(200).json({ success: true, message: "Course updated successfully", data: result });
     } catch (error) {
         next(error);
