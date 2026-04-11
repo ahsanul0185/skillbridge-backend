@@ -136,7 +136,7 @@ const getAllTutors = async ({search, hourlyRate, categoryId, isFeatured, avgRati
 
 const getTutorById = async (tutorId : string) => {
     
-   return await prisma.tutorProfiles.findUnique({
+   const tutor = await prisma.tutorProfiles.findUnique({
         where : {
             id : tutorId
         },
@@ -155,7 +155,29 @@ const getTutorById = async (tutorId : string) => {
                 }
             }
         }
-   })
+   });
+
+   if (!tutor) return null;
+
+   const relatedTutors = tutor.categoryId
+       ? await prisma.tutorProfiles.findMany({
+             where: {
+                 categoryId: tutor.categoryId,
+                 id: { not: tutorId },
+                 user: { status: "ACTIVE" },
+             },
+             take: 4,
+             include: {
+                 user: true,
+                 category: true,
+                 availability: true,
+                 _count: { select: { reviews: true } },
+             },
+             orderBy: { avgRating: "desc" },
+         })
+       : [];
+
+   return { ...tutor, relatedTutors };
 
 }
 

@@ -33,7 +33,7 @@ export const getPublicCourses = async (query: any) => {
 };
 
 export const getCourseDetails = async (courseId: string) => {
-    return await prisma.course.findUniqueOrThrow({
+    const course = await prisma.course.findUniqueOrThrow({
         where: { id: courseId },
         include: { 
             institute: { select: { name: true, logoUrl: true, description: true } }, 
@@ -42,6 +42,26 @@ export const getCourseDetails = async (courseId: string) => {
             _count: { select: { enrollments: true } }
         }
     });
+
+    const relatedCourses = course.categoryId
+        ? await prisma.course.findMany({
+              where: {
+                  categoryId: course.categoryId,
+                  id: { not: courseId },
+                  isPublished: true,
+              },
+              take: 4,
+              include: {
+                  institute: { select: { name: true, logoUrl: true } },
+                  mentors: { include: { user: { select: { name: true, image: true } } } },
+                  category: true,
+                  _count: { select: { enrollments: true } },
+              },
+              orderBy: { createdAt: "desc" },
+          })
+        : [];
+
+    return { ...course, relatedCourses };
 };
 
 export const getInstituteCourses = async (instituteId: string, query: any) => {
